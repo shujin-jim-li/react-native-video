@@ -262,20 +262,32 @@ export default class Video extends Component {
 
   render() {
     const resizeMode = this.props.resizeMode;
-    const source = resolveAssetSource(this.props.source) || {};
-    const shouldCache = !source.__packager_asset;
+    const srcs = this.props.sources.map(item => {
+      const source = resolveAssetSource(item) || {};
+      const shouldCache = !source.__packager_asset;
 
-    let uri = source.uri || '';
-    if (uri && uri.match(/^\//)) {
-      uri = `file://${uri}`;
-    }
+      let uri = source.uri || '';
+      if (uri && uri.match(/^\//)) {
+        uri = `file://${uri}`;
+      }
 
-    if (!uri) {
-      console.warn('Trying to load empty source.');
-    }
+      if (!uri) {
+        console.warn('Trying to load empty source.');
+      }
 
-    const isNetwork = !!(uri && uri.match(/^https?:/));
-    const isAsset = !!(uri && uri.match(/^(assets-library|ipod-library|file|content|ms-appx|ms-appdata):/));
+      const isNetwork = !!(uri && uri.match(/^https?:/));
+      const isAsset = !!(uri && uri.match(/^(assets-library|ipod-library|file|content|ms-appx|ms-appdata):/));
+      return {
+        uri,
+        isNetwork,
+        isAsset,
+        shouldCache,
+        type: source.type || '',
+        mainVer: source.mainVer || 0,
+        patchVer: source.patchVer || 0,
+        requestHeaders: source.headers ? this.stringsOnlyObject(source.headers) : {},
+      };
+    });
 
     let nativeResizeMode;
     const RCTVideoInstance = this.getViewManagerConfig('RCTVideo');
@@ -294,16 +306,7 @@ export default class Video extends Component {
     Object.assign(nativeProps, {
       style: [styles.base, nativeProps.style],
       resizeMode: nativeResizeMode,
-      src: {
-        uri,
-        isNetwork,
-        isAsset,
-        shouldCache,
-        type: source.type || '',
-        mainVer: source.mainVer || 0,
-        patchVer: source.patchVer || 0,
-        requestHeaders: source.headers ? this.stringsOnlyObject(source.headers) : {},
-      },
+      srcs,
       onVideoLoadStart: this._onLoadStart,
       onVideoLoad: this._onLoad,
       onVideoError: this._onError,
@@ -371,7 +374,7 @@ Video.propTypes = {
   ]),
   filterEnabled: PropTypes.bool,
   /* Native only */
-  src: PropTypes.object,
+  srcs: PropTypes.arrayOf(PropTypes.object),
   seek: PropTypes.oneOfType([
     PropTypes.number,
     PropTypes.object,
@@ -394,13 +397,13 @@ Video.propTypes = {
   onVideoFullscreenPlayerDidDismiss: PropTypes.func,
 
   /* Wrapper component */
-  source: PropTypes.oneOfType([
+  sources: PropTypes.arrayOf(PropTypes.oneOfType([
     PropTypes.shape({
       uri: PropTypes.string,
     }),
     // Opaque type returned by require('./video.mp4')
     PropTypes.number,
-  ]),
+  ])),
   drm: PropTypes.shape({
     type: PropTypes.oneOf([
       DRMType.CLEARKEY, DRMType.FAIRPLAY, DRMType.WIDEVINE, DRMType.PLAYREADY
@@ -511,7 +514,7 @@ Video.propTypes = {
 
 const RCTVideo = requireNativeComponent('RCTVideo', Video, {
   nativeOnly: {
-    src: true,
+    srcs: true,
     seek: true,
     fullscreen: true,
   },
