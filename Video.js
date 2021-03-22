@@ -93,19 +93,13 @@ export default class Video extends Component {
     }
   }
 
-  _onLoadStart = (event) => {
-    if (this.props.onLoadStart) {
-      this.props.onLoadStart(event.nativeEvent);
-    }
-  };
-
-  _onLoad = (event) => {
+  _onItemStart = (event) => {
     // Need to hide poster here for windows as onReadyForDisplay is not implemented
     if (Platform.OS === 'windows') {
       this._hidePoster();
     }
-    if (this.props.onLoad) {
-      this.props.onLoad(event.nativeEvent);
+    if (this.props.onItemStart) {
+      this.props.onItemStart(event.nativeEvent);
     }
   };
 
@@ -130,6 +124,12 @@ export default class Video extends Component {
   _onSeek = (event) => {
     if (this.props.onSeek) {
       this.props.onSeek(event.nativeEvent);
+    }
+  };
+
+  _onItemEnd = (event) => {
+    if (this.props.onItemEnd) {
+      this.props.onItemEnd(event.nativeEvent);
     }
   };
 
@@ -307,12 +307,12 @@ export default class Video extends Component {
       style: [styles.base, nativeProps.style],
       resizeMode: nativeResizeMode,
       srcs,
-      onVideoLoadStart: this._onLoadStart,
-      onVideoLoad: this._onLoad,
+      onVideoItemStart: this._onItemStart,
+      onVideoItemEnd: this._onItemEnd,
+      onVideoQueueEnd: this._onEnd,
       onVideoError: this._onError,
       onVideoProgress: this._onProgress,
       onVideoSeek: this._onSeek,
-      onVideoEnd: this._onEnd,
       onVideoBuffer: this._onBuffer,
       onVideoBandwidthUpdate: this._onBandwidthUpdate,
       onTimedMetadata: this._onTimedMetadata,
@@ -380,14 +380,14 @@ Video.propTypes = {
     PropTypes.object,
   ]),
   fullscreen: PropTypes.bool,
-  onVideoLoadStart: PropTypes.func,
-  onVideoLoad: PropTypes.func,
+  onVideoItemStart: PropTypes.func,
+  onVideoItemEnd: PropTypes.func,
+  onVideoQueueEnd: PropTypes.func,
   onVideoBuffer: PropTypes.func,
   onVideoError: PropTypes.func,
   onVideoProgress: PropTypes.func,
   onVideoBandwidthUpdate: PropTypes.func,
   onVideoSeek: PropTypes.func,
-  onVideoEnd: PropTypes.func,
   onTimedMetadata: PropTypes.func,
   onVideoAudioBecomingNoisy: PropTypes.func,
   onVideoExternalPlaybackChange: PropTypes.func,

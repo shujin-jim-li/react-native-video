@@ -28,10 +28,10 @@ class RCTVideoManager extends RCTViewManager {
       .addNumberProp("seek", this.setSeek)
       .addObjectProp("src", this.setSource)
       .addNumberProp("volume", this.setVolume)
-      .addDirectEvent("onVideoEnd")
       .addDirectEvent("onVideoError")
-      .addDirectEvent("onVideoLoad")
-      .addDirectEvent("onVideoLoadStart")
+      .addDirectEvent("onVideoItemStart")
+      .addDirectEvent("onVideoItemEnd")
+      .addDirectEvent("onVideoQueueEnd")
       .addDirectEvent("onVideoProgress");
   }
 

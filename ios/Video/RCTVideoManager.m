@@ -49,15 +49,14 @@ RCT_EXPORT_VIEW_PROPERTY(filter, NSString);
 RCT_EXPORT_VIEW_PROPERTY(filterEnabled, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(progressUpdateInterval, float);
 RCT_EXPORT_VIEW_PROPERTY(restoreUserInterfaceForPIPStopCompletionHandler, BOOL);
-/* Should support: onLoadStart, onLoad, and onError to stay consistent with Image */
-RCT_EXPORT_VIEW_PROPERTY(onVideoLoadStart, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onVideoLoad, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onVideoItemStart, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onVideoItemEnd, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onVideoQueueEnd, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoBuffer, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoProgress, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onBandwidthUpdate, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoSeek, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onVideoEnd, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onTimedMetadata, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoAudioBecomingNoisy, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoFullscreenPlayerWillPresent, RCTDirectEventBlock);

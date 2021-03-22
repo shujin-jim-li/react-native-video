@@ -27,6 +27,11 @@ static int const RCTVideoUnset = -1;
   AVQueuePlayer *_player;
   NSArray<AVPlayerItem *> *_playerItems;
   NSArray<NSDictionary *> *_sources;
+  NSInteger _currentIndex;
+  AVPlayerItem *_currentPlayerItem;
+  NSDictionary *_currentSource;
+  NSString *_currentUri;
+
   BOOL _playerItemObserversSet;
   BOOL _playerBufferEmpty;
   AVPlayerLayer *_playerLayer;
@@ -44,7 +49,6 @@ static int const RCTVideoUnset = -1;
   RCTEventDispatcher *_eventDispatcher;
   BOOL _playbackRateObserverRegistered;
   BOOL _isExternalPlaybackActiveObserverRegistered;
-  BOOL _videoLoadStarted;
   
   bool _pendingSeek;
   float _pendingSeekTime;
@@ -406,23 +410,8 @@ static int const RCTVideoUnset = -1;
       if (@available(iOS 10.0, *)) {
         [self setAutomaticallyWaitsToMinimizeStalling:_automaticallyWaitsToMinimizeStalling];
       }
-
-      //Perform on next run loop, otherwise onVideoLoadStart is nil
-      NSDictionary *source = [self->_sources objectAtIndex: 0];
-      if (self.onVideoLoadStart) {
-        id uri = [source objectForKey:@"uri"];
-        id type = [source objectForKey:@"type"];
-        self.onVideoLoadStart(@{@"src": @{
-                                    @"uri": uri ? uri : [NSNull null],
-                                    @"type": type ? type : [NSNull null],
-                                    @"isNetwork": [NSNumber numberWithBool:(bool)[source objectForKey:@"isNetwork"]]},
-                                @"drm": self->_drm ? self->_drm : [NSNull null],
-                                @"target": self.reactTag
-                                });
-      }
     }];
   });
-  _videoLoadStarted = YES;
 }
 
 - (void)setDrm:(NSDictionary *)drm {
@@ -710,26 +699,15 @@ static int const RCTVideoUnset = -1;
           [self setCurrentTime:_pendingSeekTime];
           _pendingSeek = false;
         }
+
+        self->_currentPlayerItem = playerItem;
+        self->_currentIndex = [self->_playerItems indexOfObject: self->_currentPlayerItem];
+        self->_currentSource = [self->_sources objectAtIndex: self->_currentIndex];
+        self->_currentUri = [self->_currentSource objectForKey: @"uri"];
         
-        if (self.onVideoLoad && _videoLoadStarted) {
-          self.onVideoLoad(@{@"duration": [NSNumber numberWithFloat:duration],
-                             @"currentTime": [NSNumber numberWithFloat:CMTimeGetSeconds(playerItem.currentTime)],
-                             @"canPlayReverse": [NSNumber numberWithBool:playerItem.canPlayReverse],
-                             @"canPlayFastForward": [NSNumber numberWithBool:playerItem.canPlayFastForward],
-                             @"canPlaySlowForward": [NSNumber numberWithBool:playerItem.canPlaySlowForward],
-                             @"canPlaySlowReverse": [NSNumber numberWithBool:playerItem.canPlaySlowReverse],
-                             @"canStepBackward": [NSNumber numberWithBool:playerItem.canStepBackward],
-                             @"canStepForward": [NSNumber numberWithBool:playerItem.canStepForward],
-                             @"naturalSize": @{
-                                 @"width": width,
-                                 @"height": height,
-                                 @"orientation": orientation
-                                 },
-                             @"audioTracks": [self getAudioTrackInfo],
-                             @"textTracks": [self getTextTrackInfo],
-                             @"target": self.reactTag});
+        if (self.onVideoItemStart) {
+          self.onVideoItemStart(@{@"uri": self->_currentUri});
         }
-        _videoLoadStarted = NO;
         
         [self attachListeners];
         [self applyModifiers];
@@ -860,16 +838,24 @@ static int const RCTVideoUnset = -1;
 
 - (void)playerItemDidReachEnd:(NSNotification *)notification
 {
-  AVPlayerItem *currentItem = [notification object];
-  if (currentItem != [self->_playerItems lastObject]) {
+  self->_currentPlayerItem = [notification object];
+  self->_currentIndex = [self->_playerItems indexOfObject: self->_currentPlayerItem];
+  self->_currentSource = [self->_sources objectAtIndex: self->_currentIndex];
+  self->_currentUri = [self->_currentSource objectForKey: @"uri"];
+
+  if (self.onVideoItemEnd) {
+    self.onVideoItemEnd(@{@"uri": self->_currentUri});
+  }
+
+  if (self->_currentPlayerItem != [self->_playerItems lastObject]) {
     [self->_player advanceToNextItem];
   } else {
-    [self removePlayerTimeObserver];
-    if (self.onVideoEnd) {
-      self.onVideoEnd(@{@"target": self.reactTag});
+    if (self.onVideoQueueEnd) {
+      self.onVideoQueueEnd(@{});
     }
+    [self removePlayerTimeObserver];
   }
-  
+
   if (_repeat) {
     AVPlayerItem *item = [notification object];
     [item seekToTime:kCMTimeZero];

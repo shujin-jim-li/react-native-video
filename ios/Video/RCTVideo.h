@@ -21,14 +21,14 @@
 @interface RCTVideo : UIView <RCTVideoPlayerViewControllerDelegate, AVPictureInPictureControllerDelegate, AVAssetResourceLoaderDelegate>
 #endif
 
-@property (nonatomic, copy) RCTDirectEventBlock onVideoLoadStart;
-@property (nonatomic, copy) RCTDirectEventBlock onVideoLoad;
+@property (nonatomic, copy) RCTDirectEventBlock onVideoItemStart;
+@property (nonatomic, copy) RCTDirectEventBlock onVideoItemEnd;
+@property (nonatomic, copy) RCTDirectEventBlock onVideoQueueEnd;
 @property (nonatomic, copy) RCTDirectEventBlock onVideoBuffer;
 @property (nonatomic, copy) RCTDirectEventBlock onVideoError;
 @property (nonatomic, copy) RCTDirectEventBlock onVideoProgress;
 @property (nonatomic, copy) RCTDirectEventBlock onBandwidthUpdate;
 @property (nonatomic, copy) RCTDirectEventBlock onVideoSeek;
-@property (nonatomic, copy) RCTDirectEventBlock onVideoEnd;
 @property (nonatomic, copy) RCTDirectEventBlock onTimedMetadata;
 @property (nonatomic, copy) RCTDirectEventBlock onVideoAudioBecomingNoisy;
 @property (nonatomic, copy) RCTDirectEventBlock onVideoFullscreenPlayerWillPresent;
