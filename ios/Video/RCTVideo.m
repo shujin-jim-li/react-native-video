@@ -30,7 +30,7 @@ static int const RCTVideoUnset = -1;
   NSInteger _currentIndex;
   AVPlayerItem *_currentPlayerItem;
   NSDictionary *_currentSource;
-  NSString *_currentUri;
+  NSString *_currentId;
 
   BOOL _playerItemObserversSet;
   BOOL _playerBufferEmpty;
@@ -269,6 +269,8 @@ static int const RCTVideoUnset = -1;
 - (void)sendProgressUpdate
 {
   AVPlayerItem *video = [_player currentItem];
+  [self updateCurrentItemData: video];
+
   if (video == nil || video.status != AVPlayerItemStatusReadyToPlay) {
     return;
   }
@@ -285,8 +287,9 @@ static int const RCTVideoUnset = -1;
   
   [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTVideo_progress" object:nil userInfo:@{@"progress": [NSNumber numberWithDouble: currentTimeSecs / duration]}];
   
-  if( currentTimeSecs >= 0 && self.onVideoProgress) {
+  if (currentTimeSecs >= 0 && self.onVideoProgress) {
     self.onVideoProgress(@{
+                           @"id": self->_currentId,
                            @"currentTime": [NSNumber numberWithFloat:CMTimeGetSeconds(currentTime)],
                            @"playableDuration": [self calculatePlayableDuration],
                            @"atValue": [NSNumber numberWithLongLong:currentTime.value],
@@ -700,13 +703,10 @@ static int const RCTVideoUnset = -1;
           _pendingSeek = false;
         }
 
-        self->_currentPlayerItem = playerItem;
-        self->_currentIndex = [self->_playerItems indexOfObject: self->_currentPlayerItem];
-        self->_currentSource = [self->_sources objectAtIndex: self->_currentIndex];
-        self->_currentUri = [self->_currentSource objectForKey: @"uri"];
+        [self updateCurrentItemData: playerItem];
         
         if (self.onVideoItemStart) {
-          self.onVideoItemStart(@{@"uri": self->_currentUri});
+          self.onVideoItemStart(@{@"id": self->_currentId});
         }
         
         [self attachListeners];
@@ -836,15 +836,20 @@ static int const RCTVideoUnset = -1;
   _playbackStalled = YES;
 }
 
-- (void)playerItemDidReachEnd:(NSNotification *)notification
+- (void)updateCurrentItemData:(AVPlayerItem *)playerItem
 {
-  self->_currentPlayerItem = [notification object];
+  self->_currentPlayerItem = playerItem;
   self->_currentIndex = [self->_playerItems indexOfObject: self->_currentPlayerItem];
   self->_currentSource = [self->_sources objectAtIndex: self->_currentIndex];
-  self->_currentUri = [self->_currentSource objectForKey: @"uri"];
+  self->_currentId = [self->_currentSource objectForKey: @"id"];
+}
+
+- (void)playerItemDidReachEnd:(NSNotification *)notification
+{
+  [self updateCurrentItemData: [notification object]];
 
   if (self.onVideoItemEnd) {
-    self.onVideoItemEnd(@{@"uri": self->_currentUri});
+    self.onVideoItemEnd(@{@"id": self->_currentId});
   }
 
   if (self->_currentPlayerItem != [self->_playerItems lastObject]) {

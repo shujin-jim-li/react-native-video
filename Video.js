@@ -278,6 +278,7 @@ export default class Video extends Component {
       const isNetwork = !!(uri && uri.match(/^https?:/));
       const isAsset = !!(uri && uri.match(/^(assets-library|ipod-library|file|content|ms-appx|ms-appdata):/));
       return {
+        id: item.id,
         uri,
         isNetwork,
         isAsset,
